@@ -13,9 +13,8 @@
  */
 
 const ALLOWED_ORIGINS = [
-  'null',                              // открытие файла с диска (для проверки)
-  'https://ВАШ-ДОМЕН.ru',              // ← сюда свой домен
-  'https://ВАШ-НИК.github.io',         // ← и адрес на GitHub Pages, если есть
+  'null',                                          // открытие файла с диска (для проверки)
+  'https://mtajmashanov182-max.github.io',         // сайт на GitHub Pages
 ];
 
 const MAX_LEN = 500;        // сколько символов брать из одного поля
