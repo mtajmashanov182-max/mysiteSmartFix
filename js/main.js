@@ -77,10 +77,8 @@
   }
 
   /* ---------- Формы заявки ----------
-     Заявка уходит в WhatsApp: собираем текст из полей формы и открываем
-     чат с уже заполненным сообщением. Клиенту остаётся нажать «Отправить».
-     Номер, на который приходят заявки, задаётся в booking.html:
-     у формы атрибут data-whatsapp. */
+     Заявка уходит на сервер, а он пересылает её в Телеграм.
+     Адрес сервера задаётся в booking.html: у формы атрибут data-endpoint. */
 
   /* Порядок полей в сообщении. «Что случилось» идёт последним:
      это длинный текст в несколько строк, ему место в конце. */
@@ -94,43 +92,9 @@
     problem: 'Что случилось'
   };
 
-  function buildWhatsAppText(form) {
-    var lines = ['Заявка с сайта Smartfix', ''];
-    Object.keys(LEAD_LABELS).forEach(function (field) {
-      var el = form.elements[field];
-      if (!el) return;
-      var value = (el.value || '').trim();
-      if (!value) return;
-      if (field === 'problem') {
-        lines.push('');
-        lines.push(LEAD_LABELS[field] + ':');
-        lines.push(value);
-      } else {
-        lines.push(LEAD_LABELS[field] + ': ' + value);
-      }
-    });
-    return lines.join('\n');
-  }
-
-  function sendToWhatsApp(form) {
-    var number = (form.getAttribute('data-whatsapp') || '79619997681').replace(/[^0-9]/g, '');
-    if (!number) return;
-    var url = 'https://wa.me/' + number + '?text=' + encodeURIComponent(buildWhatsAppText(form));
-
-    // На телефоне надёжнее перейти по ссылке — сразу открывается приложение.
-    // На компьютере открываем в новой вкладке, чтобы сайт остался открытым.
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      location.href = url;
-      return;
-    }
-    var win = window.open(url, '_blank', 'noopener');
-    if (!win) location.href = url;   // если браузер заблокировал новую вкладку
-  }
-
   /* Заявка на сервер. Он лежит отдельно (Cloudflare Workers) и пересылает
      заявку в Телеграм — там и хранится токен бота, в коде сайта его нет.
-     Адрес сервера задаётся у формы в booking.html: атрибут data-endpoint.
-     Пока он пустой — заявка уходит запасным путём, через WhatsApp. */
+     Адрес сервера задаётся у формы в booking.html: атрибут data-endpoint. */
   function sendToServer(form) {
     var endpoint = (form.getAttribute('data-endpoint') || '').trim();
     if (!endpoint) return Promise.resolve(false);
@@ -166,7 +130,7 @@
   }
 
   var OK_TEXT = 'Заявка отправлена. Отвечу в течение часа — обычно быстрее.';
-  var FALLBACK_TEXT = 'Отправить автоматически не получилось. Сейчас откроется WhatsApp — нажми там «Отправить», и заявка дойдёт.';
+  var FAIL_TEXT = 'Отправить заявку не получилось — похоже, пропала связь. Позвони: +7 (961) 999-76-81 или напиши в Telegram: @Saidbro335';
   var LIMIT_TEXT = 'С сегодняшнего дня заявок больше нет — лимит 3 в сутки, чтобы не было спама. Если вопрос срочный, позвони: +7 (961) 999-76-81';
 
   /* Лимит заявок. Здесь он работает как подсказка: не гоняем человека
@@ -263,14 +227,14 @@
           showResult(ok, err, OK_TEXT);
           return;
         }
-        // Лимит — это не поломка: говорим как есть и WhatsApp не открываем,
-        // иначе в лимите не было бы смысла.
+        // Лимит — это не поломка, говорим как есть.
         if (result.reason === 'limit') {
           showLimit(ok, err, result.message || LIMIT_TEXT);
           return;
         }
-        showResult(ok, err, FALLBACK_TEXT);
-        sendToWhatsApp(form);
+        // Сервер не принял заявку — отправлять больше некуда,
+        // поэтому показываем телефон и Telegram.
+        showLimit(ok, err, FAIL_TEXT);
       });
     });
   });

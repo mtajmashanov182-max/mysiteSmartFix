@@ -193,7 +193,7 @@ const script = `
 
   window.addEventListener('hashchange', function () { show(false); });
 
-  /* формы заявок — заявка уходит в WhatsApp */
+  /* формы заявок — заявка уходит на сервер, а он пересылает её в Телеграм */
   var LEAD_LABELS = {
     name: 'Имя',
     phone: 'Телефон',
@@ -203,33 +203,6 @@ const script = `
     time: 'Когда позвонить',
     problem: 'Что случилось'
   };
-
-  function buildWhatsAppText(form) {
-    var lines = ['Заявка с сайта Smartfix', ''];
-    Object.keys(LEAD_LABELS).forEach(function (field) {
-      var el = form.elements[field];
-      if (!el) return;
-      var value = (el.value || '').trim();
-      if (!value) return;
-      if (field === 'problem') {
-        lines.push('');
-        lines.push(LEAD_LABELS[field] + ':');
-        lines.push(value);
-      } else {
-        lines.push(LEAD_LABELS[field] + ': ' + value);
-      }
-    });
-    return lines.join('\\n');
-  }
-
-  function sendToWhatsApp(form) {
-    var number = (form.getAttribute('data-whatsapp') || '79619997681').replace(/[^0-9]/g, '');
-    if (!number) return;
-    var url = 'https://wa.me/' + number + '?text=' + encodeURIComponent(buildWhatsAppText(form));
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) { location.href = url; return; }
-    var win = window.open(url, '_blank', 'noopener');
-    if (!win) location.href = url;
-  }
 
   /* заявка на сервер (Cloudflare Workers) — он пересылает её в Телеграм */
   function sendToServer(form) {
@@ -263,7 +236,7 @@ const script = `
   }
 
   var OK_TEXT = 'Заявка отправлена. Отвечу в течение часа — обычно быстрее.';
-  var FALLBACK_TEXT = 'Отправить автоматически не получилось. Сейчас откроется WhatsApp — нажми там «Отправить», и заявка дойдёт.';
+  var FAIL_TEXT = 'Отправить заявку не получилось — похоже, пропала связь. Позвони: +7 (961) 999-76-81 или напиши в Telegram: @Saidbro335';
   var LIMIT_TEXT = 'С сегодняшнего дня заявок больше нет — лимит 3 в сутки, чтобы не было спама. Если вопрос срочный, позвони: +7 (961) 999-76-81';
 
   /* Лимит заявок: подсказка в браузере, настоящий замок — на сервере */
@@ -330,8 +303,8 @@ const script = `
         if (button) { button.disabled = false; button.textContent = buttonText; }
         if (result.ok) { rememberLeadLocally(); showResult(ok, err, OK_TEXT); return; }
         if (result.reason === 'limit') { showLimit(ok, err, result.message || LIMIT_TEXT); return; }
-        showResult(ok, err, FALLBACK_TEXT);
-        sendToWhatsApp(form);
+        // сервер не принял заявку — показываем телефон и Telegram
+        showLimit(ok, err, FAIL_TEXT);
       });
     });
   });
