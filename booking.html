@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Запись на ремонт телефона | Smartfix, Грозный</title>
+<meta name="description" content="Оставь заявку на ремонт телефона: прошивка, разблокировка, чистка от вирусов, замена экрана. Перезвоню в течение часа.">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/anim.js"></script>
+</head>
+<body>
+
+<header class="header" id="header">
+  <div class="container header__inner">
+    <a class="logo" href="index.html">
+      <span class="logo__mark">S<span>F</span></span>
+      <span>Smart<em>fix</em><small>программист по телефонам + мастер</small></span>
+    </a>
+    <button class="burger" id="burger" aria-label="Меню" aria-expanded="false" aria-controls="nav"><span></span></button>
+    <nav class="nav" id="nav" aria-label="Основная навигация">
+      <ul class="nav__list">
+        <li><a href="services.html">Услуги</a></li>
+        <li><a href="ios.html">Приложения</a></li>
+        <li><a href="prices.html">Цены</a></li>
+        <li><a href="how.html">Как работаю</a></li>
+        <li><a href="faq.html">Вопросы</a></li>
+        <li><a href="contacts.html">Контакты</a></li>
+        <li class="nav__phone"><a href="tel:+79619997681">📞 +7 (961) 999-76-81</a></li>
+        <li class="nav__phone"><a href="tel:+79282900505">🛠️ Мастер: +7 (928) 290-05-05</a></li>
+        <li><a class="btn btn--primary" href="booking.html">Записаться</a></li>
+      </ul>
+    </nav>
+    <div class="header__phone">
+      <a href="tel:+79619997681">+7 (961) 999-76-81</a>
+      <a href="tel:+79282900505"><span>мастер</span> +7 (928) 290-05-05</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="page-hero">
+    <div class="container">
+      <div class="crumbs"><a href="index.html">Главная</a><span>/</span>Запись</div>
+      <h1>Запись на ремонт</h1>
+      <p>Заполни форму — я перезвоню в течение часа и скажу, что с телефоном и сколько будет стоить. Ничего не отправлять и не платить на этом шаге не нужно.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="contacts">
+
+        <!-- Заявка уходит на сервер (data-endpoint), а он пересылает её в Телеграм.
+             Пока адрес не указан, работает запасной путь: открывается WhatsApp
+             с готовым текстом. Как настроить сервер — в НАСТРОЙКА-ЗАЯВОК.md -->
+        <form class="js-form" id="booking-form" data-whatsapp="79619997681" data-endpoint="https://smartfix-zayavki.mtajmashanov182.workers.dev" novalidate>
+          <!-- ловушка для ботов: человек этого поля не видит и не заполняет -->
+          <input class="hp-field" type="text" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <h2 style="font-size:22px;margin-bottom:6px">Расскажи про телефон</h2>
+          <p style="color:var(--muted);font-size:15px;margin-bottom:24px">Чем подробнее напишешь, тем точнее я назову цену сразу по телефону.</p>
+
+          <div class="form-err" role="alert"></div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-name">Как тебя зовут *</label>
+              <input id="f-name" name="name" type="text" placeholder="Например, Сайд" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="f-phone">Телефон или Telegram *</label>
+              <input id="f-phone" name="phone" type="text" placeholder="+7 (961) ... или @ник" autocomplete="tel" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-model">Модель телефона</label>
+            <input id="f-model" name="model" type="text" placeholder="Например, Redmi Note 12 или Samsung A54">
+          </div>
+
+          <div class="field">
+            <label for="f-service">Что нужно сделать</label>
+            <select id="f-service" name="service">
+              <option value="" selected>Не знаю / подскажите</option>
+              <option>Прошивка Android и iPhone</option>
+              <option>Разблокировка аккаунта</option>
+              <option>Чистка от вирусов</option>
+              <option>Восстановление данных</option>
+              <option>Перенос данных</option>
+              <option>Ускорение и настройка</option>
+              <option>Ремонт железа</option>
+              <option>Другое / не знаю</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="f-problem">Что случилось с телефоном</label>
+            <textarea id="f-problem" name="problem" placeholder="Например: утром перезагрузился и висит на логотипе, зарядку берёт. Или: сам открывает браузер и лезет реклама."></textarea>
+          </div>
+
+          <div class="field">
+            <label>Как удобнее передать телефон</label>
+            <div class="radio-row">
+              <label><input type="radio" name="way" value="Привезу сам" checked><span>Привезу сам</span></label>
+              <label><input type="radio" name="way" value="Отправлю автобусом или такси"><span>Отправлю</span></label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Когда удобно, чтобы я позвонил</label>
+            <div class="radio-row">
+              <label><input type="radio" name="time" value="Утро 9:00–12:00"><span>Утро</span></label>
+              <label><input type="radio" name="time" value="День 12:00–17:00" checked><span>День</span></label>
+              <label><input type="radio" name="time" value="Вечер 17:00–21:00"><span>Вечер</span></label>
+            </div>
+          </div>
+
+          <button class="btn btn--primary btn--wide" type="submit">Отправить заявку</button>
+          <p class="form-note">Нажимая кнопку, ты согласен на обработку данных для обратной связи. Заявка уходит мастеру сразу, больше никому её не передаю и рекламу не рассылаю.</p>
+          <div class="form-ok" role="status">Заявка отправлена. Отвечу в течение часа — обычно быстрее.</div>
+        </form>
+
+        <div>
+          <div class="section-head" style="margin-bottom:26px">
+            <span class="eyebrow">Что дальше</span>
+            <h2 style="font-size:24px">Как пройдёт запись</h2>
+          </div>
+
+          <div class="steps" style="grid-template-columns:1fr;gap:18px">
+            <div class="step">
+              <h3>Перезвоню</h3>
+              <p>В течение часа, в удобное для тебя время. Задам пару вопросов, чтобы понять причину.</p>
+            </div>
+            <div class="step">
+              <h3>Назову цену и срок</h3>
+              <p>Примерную цену — сразу по телефону. Точную — после диагностики, она бесплатная.</p>
+            </div>
+            <div class="step">
+              <h3>Договоримся о времени</h3>
+              <p>Скажешь, когда удобно привезти телефон — договоримся о времени.</p>
+            </div>
+            <div class="step">
+              <h3>Сделаю работу</h3>
+              <p>Проверим вместе, что всё работает, и я дам гарантию — до 90 дней на софт.</p>
+            </div>
+          </div>
+
+          <div class="notice notice--accent" style="margin-top:24px">
+            <h3>Нужно срочно?</h3>
+            <p>Не жди формы — напиши в WhatsApp или позвони напрямую. Так быстрее всего.</p>
+            <p style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px">
+              <a class="btn btn--ghost" href="https://wa.me/79619997681" target="_blank" rel="noopener">WhatsApp</a>
+              <a class="btn btn--ghost" href="tel:+79619997681">+7 (961) 999-76-81</a>
+              <a class="btn btn--ghost" href="tel:+79282900505">Мастер: +7 (928) 290-05-05</a>
+            </p>
+          </div>
+
+          <div class="notice" style="margin-top:20px">
+            <h3>📍 Приехать самому</h3>
+            <p>Грозный, ул. Орзамиева 19, старый рынок. Ежедневно с 9:00 до 21:00.</p>
+            <p style="margin-top:16px">
+              <a class="btn btn--ghost" href="contacts.html">Адрес и как добраться</a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-soft">
+    <div class="container">
+      <div class="cta">
+        <div>
+          <h2>Сначала хочу узнать цену</h2>
+          <p>Это нормально. Посмотри прайс — а если своей услуги не найдёшь, просто напиши, я отвечу без обязательств.</p>
+        </div>
+        <div class="cta__actions">
+          <a class="btn btn--primary" href="prices.html">Посмотреть цены</a>
+          <a class="btn btn--ghost" href="faq.html">Частые вопросы</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__top">
+      <div>
+        <h4>Smartfix</h4>
+        <p>Программист по телефонам: прошивка, разблокировка, ремонт ПО и железа.</p>
+        <p>Грозный, ул. Орзамиева 19, старый рынок</p>
+      </div>
+      <div>
+        <h4>Разделы</h4>
+        <ul>
+          <li><a href="services.html">Услуги</a></li>
+          <li><a href="ios.html">Программы для iPhone</a></li>
+          <li><a href="prices.html">Цены</a></li>
+          <li><a href="how.html">Как работаю</a></li>
+          <li><a href="faq.html">Вопросы</a></li>
+          <li><a href="contacts.html">Контакты</a></li>
+          <li><a href="booking.html">Запись на ремонт</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Связь</h4>
+        <ul>
+          <li><a href="tel:+79619997681">+7 (961) 999-76-81</a></li>
+          <li><a href="tel:+79282900505">Мастер: +7 (928) 290-05-05</a></li>
+          <li><a href="https://wa.me/79619997681" target="_blank" rel="noopener">WhatsApp</a></li>
+          <li><a href="https://t.me/Saidbro335" target="_blank" rel="noopener">Telegram @Saidbro335</a></li>
+        </ul>
+        <p style="margin-top:12px">Ежедневно с 9:00 до 21:00</p>
+      </div>
+    </div>
+    <div class="footer__inner">
+      <div>© <span class="js-year">2026</span> Smartfix — программист по телефонам, Грозный</div>
+      <div>Гарантия на работу до 90 дней</div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
