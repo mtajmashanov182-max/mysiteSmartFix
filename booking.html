@@ -51,9 +51,13 @@
     <div class="container">
       <div class="contacts">
 
-        <!-- Заявка уходит на сервер (data-endpoint), а он пересылает её в Телеграм.
-             Как настроить сервер — в НАСТРОЙКА-ЗАЯВОК.md -->
-        <form class="js-form" id="booking-form" data-endpoint="https://smartfix-zayavki.mtajmashanov182.workers.dev" novalidate>
+        <!-- Заявку отправляет GitHub Actions, а он пересылает её в Телеграм:
+             Cloudflare и api.telegram.org из России недоступны, а GitHub
+             работает. Настройки — в js/lead-config.js, как всё устроено —
+             в НАСТРОЙКА-ЗАЯВОК.md. Если автоматика не сработает, человеку
+             покажется кнопка «Открыть Телеграм с заявкой».
+             Свой сервер, если он появится, вписывается в data-endpoint. -->
+        <form class="js-form" id="booking-form" novalidate>
           <!-- ловушка для ботов: человек этого поля не видит и не заполняет -->
           <input class="hp-field" type="text" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <h2 style="font-size:22px;margin-bottom:6px">Расскажи про телефон</h2>
@@ -221,6 +225,7 @@
   </div>
 </footer>
 
+<script src="js/lead-config.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

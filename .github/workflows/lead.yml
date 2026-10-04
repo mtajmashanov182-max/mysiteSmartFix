@@ -1,0 +1,134 @@
+# Заявка с сайта Smartfix -> в Телеграм мастеру.
+#
+# Почему так, а не как раньше. Раньше заявку принимал Cloudflare Worker
+# (worker-telegram.js), но домен *.workers.dev в России заблокирован,
+# а с июня 2025 Cloudflare в России ещё и замедляют. Отправлять заявку
+# прямо из браузера в api.telegram.org тоже нельзя: там блокировка по
+# имени сайта в шифрованном соединении, из российских сетей не проходит.
+# GitHub из России доступен, а его серверы стоят вне России — поэтому
+# заявку отправляет GitHub, а не браузер клиента.
+#
+# Токен бота и chat_id лежат в секретах репозитория (Settings -> Secrets
+# and variables -> Actions), в браузер они не попадают.
+#
+# Проверить, что всё работает: вкладка Actions -> «Заявка с сайта» ->
+# Run workflow -> в поле payload вставить
+#   {"name": "Проверка", "phone": "+7 961 999-76-81"}
+# и нажать Run workflow. Через полминуты должно прийти сообщение в Телеграм.
+
+name: Заявка с сайта
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: 'Заявка в виде JSON (для проверки впиши {"name": "Проверка", "phone": "+7..."})'
+        required: true
+        type: string
+
+# Заявки не должны идти внахлёст: пусть выстраиваются в очередь.
+concurrency:
+  group: lead
+  cancel-in-progress: false
+
+# Свои права этому workflow не нужны: он только стучится в Телеграм.
+permissions: {}
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Отправить заявку в Телеграм
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          PAYLOAD: ${{ inputs.payload }}
+        run: |
+          python3 - <<'PY'
+          import html, json, os, sys, urllib.error, urllib.parse, urllib.request
+
+          # Подписи полей — ровно те, что ставит сайт (js/main.js, LEAD_LABELS):
+          # он присылает заявку уже с русскими ключами. Здесь задан только
+          # порядок строк в сообщении. «Что случилось» идёт последним:
+          # это длинный текст в несколько строк, ему место в конце.
+          ORDER = [
+              "Имя",
+              "Телефон",
+              "Модель телефона",
+              "Услуга",
+              "Как передать телефон",
+              "Когда позвонить",
+              "Что случилось",
+          ]
+          MAX_LEN = 500      # сколько символов берём из одного поля
+          MAX_TOTAL = 4000   # ограничение Телеграма на длину сообщения
+
+          token = os.environ.get("BOT_TOKEN", "").strip()
+          chat_id = os.environ.get("CHAT_ID", "").strip()
+          if not token or not chat_id:
+              sys.exit("В секретах репозитория не заданы BOT_TOKEN и CHAT_ID")
+
+          try:
+              lead = json.loads(os.environ.get("PAYLOAD", ""))
+          except ValueError:
+              sys.exit("Заявка пришла не в формате JSON")
+
+          if not isinstance(lead, dict):
+              sys.exit("Заявка пришла не тем, чем ожидалось")
+
+          # ловушка для ботов: человек это поле не видит и не заполняет
+          if str(lead.get("hp", "")).strip():
+              print("Похоже на бота — заявку не отправляю")
+              sys.exit(0)
+
+          # Поля, которых нет в списке (например, в форму добавили новое),
+          # тоже отправляем — лучше лишняя строка, чем потерянная заявка.
+          labels = list(ORDER)
+          for key in lead:
+              if key not in ORDER and key != "hp":
+                  labels.append(key)
+
+          lines = ["🔔 <b>Новая заявка с сайта</b>"]
+          filled = 0
+          for label in labels:
+              # переносы строк схлопываем в пробелы: так сообщение
+              # остаётся коротким и читается с одного взгляда
+              value = " ".join(str(lead.get(label, "")).split())[:MAX_LEN]
+              if not value:
+                  continue
+              # quote=False: Телеграм понимает только &amp; &lt; &gt;,
+              # кавычки в ответе клиента должны остаться кавычками
+              lines.append("")
+              lines.append("<b>" + html.escape(label) + ":</b> " + html.escape(value, quote=False))
+              filled += 1
+
+          if not filled:
+              sys.exit("Пустая заявка")
+
+          body = urllib.parse.urlencode({
+              "chat_id": chat_id,
+              "text": "\n".join(lines)[:MAX_TOTAL],
+              "parse_mode": "HTML",
+              "disable_web_page_preview": "true",
+          }).encode("utf-8")
+
+          request = urllib.request.Request(
+              "https://api.telegram.org/bot" + token + "/sendMessage", data=body
+          )
+
+          try:
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  answer = json.loads(response.read().decode("utf-8"))
+          except urllib.error.HTTPError as error:
+              answer = json.loads(error.read().decode("utf-8") or "{}")
+          except Exception as error:
+              # Сам текст ошибки не печатаем: в нём может оказаться адрес
+              # запроса вместе с токеном бота, а журналы читает кто угодно.
+              sys.exit("До Телеграма не достучались (" + type(error).__name__ + ")")
+
+          if not answer.get("ok"):
+              sys.exit("Телеграм отказал: " + str(answer.get("description")))
+
+          print("Заявка отправлена")
+          PY

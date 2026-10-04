@@ -1,0 +1,70 @@
+# Показывает, какие чаты писали боту, — отсюда берётся chat_id.
+#
+# Раньше это умел Cloudflare Worker: у него была страница /setup. Но домен
+# *.workers.dev в России заблокирован, и открыть её без VPN больше нельзя.
+# GitHub из России работает, поэтому спрашиваем у Телеграма через него.
+#
+# Запуск: вкладка Actions -> «Узнать chat_id» -> Run workflow -> Run workflow.
+# Результат смотри в журнале запуска, строка «твой chat_id».
+
+name: Узнать chat_id
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  chat-id:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Спросить у Телеграма, кто писал боту
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys, urllib.request
+
+          token = os.environ.get("BOT_TOKEN", "").strip()
+          if not token:
+              sys.exit("В секретах репозитория не задан BOT_TOKEN")
+
+          try:
+              with urllib.request.urlopen(
+                  "https://api.telegram.org/bot" + token + "/getUpdates", timeout=30
+              ) as response:
+                  answer = json.loads(response.read().decode("utf-8"))
+          except Exception as error:
+              # текст ошибки не печатаем: в нём может оказаться адрес
+              # запроса вместе с токеном бота, а журналы читает кто угодно
+              sys.exit("До Телеграма не достучались (" + type(error).__name__ + ")")
+
+          if not answer.get("ok"):
+              sys.exit("Телеграм отказал: " + str(answer.get("description")))
+
+          chats = []
+          seen = set()
+          for update in answer.get("result", []):
+              message = (update.get("message") or update.get("edited_message")
+                         or update.get("my_chat_member") or {})
+              chat = message.get("chat") or {}
+              if not chat or chat.get("id") in seen:
+                  continue
+              seen.add(chat["id"])
+              name = " ".join(filter(None, [chat.get("first_name"), chat.get("last_name")]))
+              name = name or chat.get("title") or "без имени"
+              username = "@" + chat["username"] if chat.get("username") else ""
+              chats.append((chat["id"], name, username))
+
+          if not chats:
+              sys.exit("Боту ещё никто не писал. Открой своего бота в Телеграме, "
+                       "напиши ему «привет» и запусти это заново")
+
+          print("Кто писал боту:")
+          for chat_id, name, username in chats:
+              print("  " + str(chat_id) + "  " + name + " " + username)
+
+          print("")
+          print("твой chat_id: " + str(chats[0][0]))
+          PY

@@ -404,6 +404,17 @@ button[type="submit"]:disabled{opacity:.65;cursor:default}
   background:rgba(224,87,79,.12);color:#ff8b83;font-weight:700;font-size:15px;
 }
 .form-err.is-visible{display:block}
+/* Запасной путь, когда автоматика не сработала: кнопка с готовым текстом
+   заявки. Пояснение идёт обычным весом — сплошной жирный текст читается
+   тяжело, а здесь важно прочитать. */
+.form-err span{display:block;font-weight:400}
+.form-err__btn{
+  display:inline-block;margin-top:12px;padding:11px 18px;border-radius:11px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#06121a;font-weight:700;text-decoration:none;
+}
+.form-err__btn:hover{filter:brightness(1.08)}
+.form-err__phone{margin-top:10px;font-size:14px}
 .radio-row{display:flex;flex-wrap:wrap;gap:10px}
 .radio-row label{
   display:flex;align-items:center;gap:9px;margin:0;
